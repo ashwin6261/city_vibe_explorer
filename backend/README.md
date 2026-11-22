@@ -31,6 +31,7 @@ npm start                   # http://localhost:3000
 | GET | `/api/places/nearby?lat=&lng=&radius=&limit=` | Places within radius, sorted by distance |
 | GET | `/api/places/:id` | Place detail + its reels |
 | GET | `/api/search?q=` | Name/area/category search (rating desc) |
+| GET | `/api/cities?q=&limit=` | All India states/cities/towns search (bundled dataset + live Nominatim fallback) |
 | GET | `/api/reels/trending?lat=&lng=&radius=` | Reels near a location |
 | GET | `/api/reels/youtube?q=&max=` | Live YouTube Shorts for a place |
 | POST | `/api/reels/oembed` | `{ "url": "..." }` → embed payload |

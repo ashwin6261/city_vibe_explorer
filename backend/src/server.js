@@ -8,6 +8,7 @@ import { initDb, query } from './db.js';
 import placesRouter from './routes/places.js';
 import searchRouter from './routes/search.js';
 import reelsRouter from './routes/reels.js';
+import citiesRouter from './routes/cities.js';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.get('/api/config', (_req, res) => {
 app.use('/api/places', placesRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/reels', reelsRouter);
+app.use('/api/cities', citiesRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

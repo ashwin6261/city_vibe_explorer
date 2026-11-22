@@ -39,6 +39,9 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isFetching = false;
+  Timer? _debounce;
+  List<Place> _searchResults = [];
+  bool _showResults = false;
   late final PageController _pageController;
 
   // Current map center (updated on search / location / recenter).
@@ -56,6 +59,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _positionStreamSubscription?.cancel();
     _searchController.dispose();
     _pageController.dispose();
@@ -115,6 +119,41 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     _moveTo(_mapCenter, 13.5);
     await _fetchNearby(result.latitude, result.longitude);
     if (mounted) _showMessage('Showing places near ${result.name}');
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      setState(() {
+        _showResults = false;
+        _searchResults = [];
+      });
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      unawaited(_doSearch(query));
+    });
+  }
+
+  Future<void> _doSearch(String query) async {
+    final results = await _placesService.searchLocations(query);
+    if (!mounted) return;
+    setState(() {
+      _searchResults = results;
+      _showResults = query.trim().isNotEmpty && results.isNotEmpty;
+    });
+  }
+
+  void _selectCity(Place place) {
+    setState(() {
+      _showResults = false;
+      _searchResults = [];
+      _mapCenter = LatLng(place.latitude, place.longitude);
+    });
+    _searchController.clear();
+    FocusScope.of(context).unfocus();
+    _moveTo(_mapCenter, 13.5);
+    unawaited(_fetchNearby(place.latitude, place.longitude));
   }
 
   bool _isNearJaipur() {
@@ -286,6 +325,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
                         child: TextField(
                           controller: _searchController,
                           onSubmitted: _onSearch,
+                          onChanged: _onSearchChanged,
                           textInputAction: TextInputAction.search,
                           style: const TextStyle(fontSize: 14),
                           decoration: const InputDecoration(
@@ -325,6 +365,53 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
               ],
             ),
           ),
+
+          // City dropdown results (live search: any city / town / village)
+          if (_showResults && _searchResults.isNotEmpty)
+            Positioned(
+              top: 72,
+              left: 16,
+              right: 16,
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 320),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(31),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  itemCount: _searchResults.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final p = _searchResults[index];
+                    return ListTile(
+                      leading:
+                          const Icon(Icons.location_city, color: Colors.deepOrange),
+                      title: Text(
+                        p.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      subtitle: Text(
+                        p.address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      onTap: () => _selectCity(p),
+                    );
+                  },
+                ),
+              ),
+            ),
 
           // 3. Bottom place cards (sorted by rating) or empty state
           if (_filteredPlaces.isNotEmpty)

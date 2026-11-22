@@ -135,6 +135,47 @@ class PlacesService {
     }
   }
 
+  /// Live multi-result location search (city / town / village) via Nominatim.
+  /// Powers the city dropdown; works anywhere in India (and the world).
+  Future<List<Place>> searchLocations(String query, {int limit = 8}) async {
+    final q = query.trim();
+    if (q.isEmpty) return [];
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search'
+        '?q=${Uri.encodeQueryComponent(q)}&format=json&limit=$limit&addressdetails=1',
+      );
+      final response = await http
+          .get(url,
+              headers: {'User-Agent': 'CityVibeExplorer/1.0 (city vibe explorer)'})
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) return [];
+      final data = jsonDecode(response.body) as List;
+      return data.map((d) {
+        final name = String(d['display_name'] ?? q).split(',').first.trim();
+        return Place(
+          id: 'search_${d['place_id'] ?? d['lat']}',
+          name: name.isEmpty ? q : name,
+          category: 'City / Place',
+          moods: const ['visual'],
+          latitude: double.tryParse(d['lat']?.toString() ?? '') ?? 0.0,
+          longitude: double.tryParse(d['lon']?.toString() ?? '') ?? 0.0,
+          rating: 0,
+          userRatingsTotal: 0,
+          visualScore: 0,
+          imageUrl:
+              'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name.isEmpty ? q : name)}',
+          address: String(d['display_name'] ?? q),
+          description: 'Search result for "$q".',
+          mustTry: 'Explore nearby',
+          openingHours: '',
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   /// Google Places API (New) Nearby Search (keyed). Returns [] without a key.
   Future<List<Place>> fetchLiveNearbyPlaces({
     required double latitude,
