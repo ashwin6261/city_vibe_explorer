@@ -28,24 +28,53 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # The android/ scaffold is committed, but the Gradle wrapper (gradlew +
+      # gradle-wrapper.jar) is not. `flutter create` recreates only missing
+      # files and never overwrites existing ones, so the custom manifest,
+      # build.gradle and res/ are preserved. The committed test/widget_test.dart
+      # prevents it from generating the template's broken default widget test.
+      - name: Generate missing platform files (Gradle wrapper)
+        run: flutter create . --platforms=android --org com.example --project-name city_vibe_explorer
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x android/gradlew || true
+
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Run Tests
+        run: flutter test
+
       - name: Build Release APK
-        run: flutter build apk --release
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          # Optional release-signing inputs. When KEYSTORE_FILE is unset the
+          # build falls back to debug signing (prototype/CI only).
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        # Maps SDK key is read by android/app/build.gradle from the
+        # GOOGLE_MAPS_API_KEY env var; the Places key is compiled into the
+        # Dart app via --dart-define.
+        run: flutter build apk --release --android-skip-build-dependency-validation --dart-define=GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: CityVibeExplorer-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
 
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
           name: "City Vibe Explorer v1.0.0 APK"
-          body: "🚀 Direct Android APK download for City Vibe Explorer. Install on any Android device to explore visual street food and top sights!"
+          body: "Direct Android APK download for City Vibe Explorer. Install on any Android device to explore visual street food and top sights!"
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
