@@ -1,15 +1,14 @@
-/// Compile-time configuration values.
+/// Compile-time configuration values (injected at build time so no keys live in source control).
 ///
-/// The Google Maps / Places API key is injected at build time so it never
-/// lives in source control:
+///   flutter run   --dart-define=GOOGLE_MAPS_API_KEY=KEY --dart-define=MAPTILER_KEY=KEY
+///   flutter build apk --release --dart-define=MAPTILER_KEY=KEY
 ///
-///   flutter run   --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
-///   flutter build apk --release --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
-///
-/// When empty, the app falls back to the curated places only and the native
-/// Google map renders in lite/unkeyed mode.
+/// - [mapTilerKey]: when set, the map uses MapTiler vector-style raster tiles.
+///   When empty, it falls back to the free CARTO/OpenStreetMap tiles (no key).
+/// - [googleMapsApiKey]: enables the Google Places (New) live data + ratings.
 class AppConfig {
   AppConfig._();
 
+  static const String mapTilerKey = String.fromEnvironment('MAPTILER_KEY');
   static const String googleMapsApiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
 }

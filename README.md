@@ -43,7 +43,7 @@ Once you have the Flutter SDK installed:
 ```bash
 cd city_vibe_explorer
 flutter pub get
-flutter run --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
+flutter run --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY --dart-define=MAPTILER_KEY=YOUR_MAPTILER_KEY
 ```
 > The key is optional for a first run: without it the app still works with the curated
 > Jaipur data (the native map simply renders unkeyed). See the key section below.
@@ -67,6 +67,20 @@ flutter build apk --release --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
   (`.github/workflows/build-apk.yml`).
 
 Restrict the key by Android package name `com.example.city_vibe_explorer` and SHA-1 fingerprint.
+
+## 🗺️ Free Map (MapTiler / OpenStreetMap)
+
+The map works **100% free with no key** using CARTO/OpenStreetMap tiles. To use
+nicer **MapTiler** tiles (free tier: 100k requests/day), grab a free key at
+https://maptiler.com and pass it:
+
+```bash
+flutter run   --dart-define=MAPTILER_KEY=YOUR_MAPTILER_KEY
+flutter build apk --release --dart-define=MAPTILER_KEY=YOUR_MAPTILER_KEY
+```
+
+Or add `MAPTILER_KEY` as a GitHub repository secret (used by CI) / Render env var.
+When the key is empty, the app automatically falls back to CARTO tiles.
 
 ### Prototyping with Maps Demo Key
 For zero-cost prototyping without a billing account, you can mint a free Maps Demo Key:

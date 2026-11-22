@@ -232,14 +232,19 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                urlTemplate: AppConfig.mapTilerKey.isNotEmpty
+                    ? 'https://api.maptiler.com/maps/voyager/{z}/{x}/{y}.png?key=${AppConfig.mapTilerKey}'
+                    : 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.city_vibe_explorer',
               ),
               MarkerLayer(markers: _markers),
-              const RichAttributionWidget(
+              RichAttributionWidget(
                 attributions: [
-                  TextSourceAttribution('© OpenStreetMap contributors © CARTO'),
+                  TextSourceAttribution(
+                    AppConfig.mapTilerKey.isNotEmpty
+                        ? '© MapTiler © OpenStreetMap contributors'
+                        : '© OpenStreetMap contributors © CARTO',
+                  ),
                 ],
               ),
             ],
