@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>City Vibe Explorer - Visual Food & Top Sights</title>
+  
+  <!-- PWA & Mobile Optimization -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#ff5722" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CityVibe" />
+
+  <!-- Fonts & Icons (Free CDN) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- 100% Free Open-Source Map Engine (Leaflet + OpenStreetMap) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+
+  <!-- 1. Interactive Map View -->
+  <div id="map"></div>
+
+  <!-- 2. Grid / Feed View (Toggleable) -->
+  <div id="feed-view">
+    <div class="feed-grid" id="feed-grid"></div>
+  </div>
+
+  <!-- 3. Floating Top Navigation & Filters Panel -->
+  <header class="floating-layer top-header-panel">
+    <div class="app-navbar interactive">
+      <!-- Brand & City Switcher -->
+      <div class="brand-section">
+        <div class="brand-logo" title="City Vibe Explorer">
+          <i class="ph-bold ph-compass"></i>
+        </div>
+        <div class="brand-titles">
+          <h1>City Vibe</h1>
+          <div class="city-select-wrapper">
+            <select class="city-select" id="city-select">
+              <option value="jaipur" selected>Jaipur (Pink City)</option>
+              <option value="delhi">Old Delhi (Chandni Chowk)</option>
+              <option value="mumbai">South Mumbai (Colaba)</option>
+              <option value="udaipur">Udaipur (Lakes & Ghats)</option>
+            </select>
+            <i class="ph-bold ph-caret-down"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Search Input -->
+      <div class="search-container">
+        <i class="ph-bold ph-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          id="search-input"
+          placeholder="Search kachori, lassi, palaces, rooftop cafes..."
+        />
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="nav-actions">
+        <!-- View Toggle (Map vs Grid Feed) -->
+        <button class="action-btn" id="btn-toggle-view" title="Toggle Grid Feed / Map View">
+          <i class="ph-bold ph-squares-four"></i>
+        </button>
+
+        <!-- GPS Location Trigger -->
+        <button class="action-btn" id="btn-gps" title="Find My GPS Location">
+          <i class="ph-bold ph-crosshair"></i>
+        </button>
+
+        <!-- Virtual Walking Simulation -->
+        <button class="action-btn" id="btn-simulate-walk" title="Simulate Walking Around the City">
+          <i class="ph-bold ph-person-simple-walk"></i>
+        </button>
+
+        <!-- Saved / Favorites Drawer Toggle -->
+        <button class="action-btn" id="btn-favorites" title="My Saved Trip Spots">
+          <i class="ph-bold ph-heart"></i>
+          <span class="badge-count" id="saved-count-badge">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Highlights Filter Row -->
+    <div class="quick-filters-row interactive">
+      <div class="quick-filter-pill" id="toggle-food">
+        <i class="ph-fill ph-fork-knife" style="color: var(--primary);"></i>
+        Visual Food Stalls
+      </div>
+      <div class="quick-filter-pill" id="toggle-top">
+        <i class="ph-fill ph-sparkle" style="color: var(--accent-gold);"></i>
+        Top Visited Places
+      </div>
+      <div class="quick-filter-pill walk-pill" id="walk-status-pill" style="display: none;">
+        <i class="ph-bold ph-footprints"></i>
+        Walking Tour Live
+      </div>
+    </div>
+
+    <!-- Mood / Vibe Filter Slider -->
+    <div class="mood-slider interactive">
+      <div class="mood-chip active" data-mood="all">
+        <i class="ph-bold ph-sparkle"></i> All Vibes
+      </div>
+      <div class="mood-chip" data-mood="foodie">
+        <i class="ph-bold ph-hamburger"></i> Foodie Cravings
+      </div>
+      <div class="mood-chip" data-mood="visual">
+        <i class="ph-bold ph-camera"></i> Insta-Visual
+      </div>
+      <div class="mood-chip" data-mood="heritage">
+        <i class="ph-bold ph-castle-turret"></i> Heritage & Forts
+      </div>
+      <div class="mood-chip" data-mood="chill">
+        <i class="ph-bold ph-coffee"></i> Chill Cafes
+      </div>
+      <div class="mood-chip" data-mood="shopping">
+        <i class="ph-bold ph-shopping-bag"></i> Bazaars & Crafts
+      </div>
+      <div class="mood-chip" data-mood="nightlife">
+        <i class="ph-bold ph-moon-stars"></i> Lively Nightlife
+      </div>
+    </div>
+  </header>
+
+  <!-- 4. Bottom Horizontal Carousel (Map View) -->
+  <footer class="floating-layer bottom-panel">
+    <div class="carousel-wrap interactive" id="places-carousel"></div>
+  </footer>
+
+  <!-- 5. Place Detail Modal Sheet -->
+  <div class="modal-backdrop" id="place-modal">
+    <div class="modal-sheet">
+      <div style="position: relative;">
+        <img id="modal-img" class="modal-hero-img" src="" alt="Place photo" />
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close details">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-title-row">
+          <div>
+            <h2 class="modal-title" id="modal-title"></h2>
+            <div class="modal-category-tag" id="modal-category"></div>
+          </div>
+          <div class="card-rating-badge" style="font-size: 14px; padding: 6px 12px;">
+            <i class="ph-fill ph-star"></i> <span id="modal-rating"></span>
+          </div>
+        </div>
+
+        <!-- Must-Try Food Highlight -->
+        <div class="modal-must-try-box">
+          <i class="ph-fill ph-flame" style="color: var(--primary); font-size: 26px;"></i>
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: var(--primary-dark); letter-spacing: 0.5px;">MUST-TRY DELICACY</div>
+            <div id="modal-must-try" style="font-size: 14px; font-weight: 700; color: var(--text-main);"></div>
+          </div>
+        </div>
+
+        <!-- Instagram / Photo Tip -->
+        <div class="modal-photo-tip-box">
+          <i class="ph-fill ph-camera" style="color: #db2777; font-size: 24px;"></i>
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #be185d; letter-spacing: 0.5px;">BEST PHOTO SPOT & ANGLE</div>
+            <div id="modal-photo-tip" style="font-size: 13px; font-weight: 600; color: #831843;"></div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <p class="modal-desc" id="modal-desc"></p>
+
+        <!-- Info List -->
+        <div class="info-rows">
+          <div class="info-row">
+            <i class="ph-bold ph-map-pin" style="color: var(--secondary); font-size: 18px;"></i>
+            <span id="modal-address"></span>
+          </div>
+          <div class="info-row">
+            <i class="ph-bold ph-clock" style="color: #10b981; font-size: 18px;"></i>
+            <span id="modal-hours"></span>
+          </div>
+          <div class="info-row">
+            <i class="ph-bold ph-users-three" style="color: #f59e0b; font-size: 18px;"></i>
+            <span id="modal-crowd"></span>
+          </div>
+        </div>
+
+        <!-- 100% Free Turn-by-Turn Navigation Launcher -->
+        <button class="modal-nav-button" id="modal-nav-button">
+          <i class="ph-bold ph-navigation-arrow"></i> Navigate in Google Maps (Free)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Saved / Favorites Drawer Sidebar -->
+  <div class="drawer-backdrop" id="favorites-drawer">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="ph-fill ph-heart" style="color: #ef4444; font-size: 22px;"></i>
+          <h2 style="font-size: 18px; font-weight: 800;">My Trip Bucket List</h2>
+        </div>
+        <button class="action-btn" id="drawer-close-btn" style="width: 34px; height: 34px;">
+          <i class="ph-bold ph-x"></i>
+        </button>
+      </div>
+      <div class="drawer-body" id="drawer-items-list"></div>
+    </div>
+  </div>
+
+  <!-- 7. Live Discovery Toast Notification -->
+  <div class="discovery-toast" id="discovery-toast">
+    <div style="background: var(--primary); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+      <i class="ph-fill ph-sparkle"></i>
+    </div>
+    <div>
+      <div id="toast-title" style="font-size: 13px; font-weight: 800;"></div>
+      <div id="toast-msg" style="font-size: 12px; color: #94a3b8;"></div>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Offline cache active (100% Free)'))
+          .catch(err => console.log('SW registration note:', err));
+      });
+    }
+  </script>
+</body>
+</html>

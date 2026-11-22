@@ -1,0 +1,22 @@
+{
+  "name": "City Vibe Explorer",
+  "short_name": "CityVibe",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#ff5722",
+  "description": "Discover visual street food stalls, iconic photo spots, and top visited places matched to your mood as you explore the city.",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?w=192&h=192&fit=crop",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?w=512&h=512&fit=crop",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
+
