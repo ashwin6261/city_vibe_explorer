@@ -37,7 +37,6 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   List<Place> _livePlaces = [];
   List<Marker> _markers = [];
   Position? _currentPosition;
-  bool _hasLocationPermission = false;
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isFetching = false;
   late final PageController _pageController;
@@ -66,7 +65,6 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   Future<void> _initLocationTracking() async {
     final granted = await LocationService.handlePermission();
     if (!mounted) return;
-    setState(() => _hasLocationPermission = granted);
     if (!granted) return;
 
     final pos = await LocationService.getCurrentLocation();

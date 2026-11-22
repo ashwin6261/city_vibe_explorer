@@ -197,13 +197,13 @@ class PlacesService {
     try {
       final r = radiusMeters.round();
       final query = '[out:json][timeout:25];('
-          'nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|food_court|biergarten|ice_cream)$"]'
+          'nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|food_court|biergarten|ice_cream)\$"]'
           '(around:$r,$latitude,$longitude);'
-          'nwr["tourism"~"^(attraction|museum|gallery|viewpoint|artwork|theme_park|zoo|aquarium)$"]'
+          'nwr["tourism"~"^(attraction|museum|gallery|viewpoint|artwork|theme_park|zoo|aquarium)\$"]'
           '(around:$r,$latitude,$longitude);'
           'nwr["historic"](around:$r,$latitude,$longitude);'
-          'nwr["leisure"~"^(park|garden)$"](around:$r,$latitude,$longitude);'
-          'nwr["shop"~"^(mall|marketplace|department_store)$"](around:$r,$latitude,$longitude);'
+          'nwr["leisure"~"^(park|garden)\$"](around:$r,$latitude,$longitude);'
+          'nwr["shop"~"^(mall|marketplace|department_store)\$"](around:$r,$latitude,$longitude);'
           ');out center 80;';
 
       final response = await http
