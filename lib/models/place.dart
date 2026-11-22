@@ -80,7 +80,7 @@ class Place {
   /// Creates a copy of this place with an updated (computed) distance.
   /// Used so per-frame distance recalculation never mutates the shared,
   /// globally cached curated place objects.
-  Place copyWith({double? distanceInKm}) {
+  Place copyWith({double? distanceInKm, String? imageUrl}) {
     return Place(
       id: id,
       name: name,
@@ -91,7 +91,7 @@ class Place {
       rating: rating,
       userRatingsTotal: userRatingsTotal,
       visualScore: visualScore,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl ?? this.imageUrl,
       address: address,
       description: description,
       mustTry: mustTry,
@@ -239,8 +239,9 @@ class Place {
       rating: rating,
       userRatingsTotal: 0,
       visualScore: score,
-      imageUrl:
-          'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name)}',
+      imageUrl: (tags['image']?.toString().isNotEmpty ?? false)
+          ? tags['image'].toString()
+          : 'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name)}',
       address: addressParts.isEmpty ? 'Nearby' : addressParts.join(', '),
       description: (tags['description'] ?? 'A notable place near you.').toString(),
       mustTry: cuisine.isNotEmpty ? 'Try the local $cuisine' : 'Explore & discover',
@@ -268,10 +269,10 @@ class Place {
   static int _visualScoreFromTags(Map<String, dynamic> tags) {
     int score = 55;
     if (tags['wikidata'] != null) score += 15;
-    if (tags['wikipedia'] != null) score += 10;
-    if (tags['image'] != null) score += 10;
-    if (tags['tourism'] == 'attraction' || tags['tourism'] == 'museum') score += 10;
-    if (tags['historic'] != null) score += 8;
+    if (tags['wikipedia'] != null) score += 15;
+    if (tags['image'] != null) score += 8;
+    if (tags['tourism'] == 'attraction' || tags['tourism'] == 'museum') score += 12;
+    if (tags['historic'] != null) score += 10;
     if (tags['cuisine'] != null) score += 5;
     return score.clamp(40, 99);
   }

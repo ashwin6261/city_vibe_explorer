@@ -330,7 +330,7 @@ class PlacesService {
           'nwr["historic"](around:$r,$latitude,$longitude);'
           'nwr["leisure"~"^(park|garden)\$"](around:$r,$latitude,$longitude);'
           'nwr["shop"~"^(mall|marketplace|department_store)\$"](around:$r,$latitude,$longitude);'
-          ');out center 80;';
+          ');out center 100;';
 
       final response = await http
           .post(
@@ -343,10 +343,35 @@ class PlacesService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final elements = (data['elements'] as List?) ?? [];
-        final places = elements
-            .whereType<Map<String, dynamic>>()
-            .map((e) => Place.fromOverpass(e))
-            .toList();
+        final places = <Place>[];
+        final wikiTitles = <String, String>{};
+
+        for (final e in elements.whereType<Map<String, dynamic>>()) {
+          final place = Place.fromOverpass(e);
+          final tags =
+              (e['tags'] as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+          final wp = tags['wikipedia']?.toString() ?? '';
+          if (wp.isNotEmpty) {
+            final title = wp.contains(':') ? wp.substring(wp.indexOf(':') + 1) : wp;
+            wikiTitles[place.id] = title;
+          }
+          places.add(place);
+        }
+
+        // Fetch real photos for famous places (batched Wikipedia pageimages).
+        if (wikiTitles.isNotEmpty) {
+          final thumbs =
+              await _fetchWikipediaThumbnails(wikiTitles.values.toSet().toList());
+          if (thumbs.isNotEmpty) {
+            for (int i = 0; i < places.length; i++) {
+              final title = wikiTitles[places[i].id];
+              if (title != null && thumbs.containsKey(title)) {
+                places[i] = places[i].copyWith(imageUrl: thumbs[title]);
+              }
+            }
+          }
+        }
+
         places.sort((a, b) => b.rating.compareTo(a.rating));
         return places;
       }
@@ -355,5 +380,35 @@ class PlacesService {
     }
 
     return [];
+  }
+
+  /// Batch-fetch real photos for famous places from Wikipedia (one API call).
+  /// Returns a map of page title -> thumbnail URL.
+  Future<Map<String, String>> _fetchWikipediaThumbnails(List<String> titles) async {
+    if (titles.isEmpty) return {};
+    try {
+      final joined = titles.take(50).join('|');
+      final url = Uri.parse(
+        'https://en.wikipedia.org/w/api.php?action=query&format=json'
+        '&prop=pageimages&piprop=thumbnail&pithumbsize=600'
+        '&titles=${Uri.encodeQueryComponent(joined)}',
+      );
+      final response = await http
+          .get(url,
+              headers: {'User-Agent': 'CityVibeExplorer/1.0 (city explorer)'})
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) return {};
+      final data = jsonDecode(response.body);
+      final pages = (data['query']?['pages'] as Map?) ?? {};
+      final result = <String, String>{};
+      pages.forEach((_, page) {
+        final title = page['title']?.toString();
+        final thumb = page['thumbnail']?['source']?.toString();
+        if (title != null && thumb != null) result[title] = thumb;
+      });
+      return result;
+    } catch (_) {
+      return {};
+    }
   }
 }
