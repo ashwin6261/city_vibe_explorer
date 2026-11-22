@@ -17,7 +17,7 @@ router.get('/nearby', async (req, res, next) => {
 
     const { rows } = await query(
       `SELECT id, city, area, name, category, rating, food_rating, budget_inr,
-              is_pure_veg, best_time, crowd_status, must_try, photo_angle_tip, fit_check,
+              is_pure_veg, best_time, crowd_status, must_try, photo_angle_tip, fit_check, lat, lng,
               ST_Distance(coords, ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography) AS distance_m
          FROM places
         WHERE ST_DWithin(coords, ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography, $3)

@@ -11,4 +11,9 @@ class AppConfig {
 
   static const String mapTilerKey = String.fromEnvironment('MAPTILER_KEY');
   static const String googleMapsApiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+
+  /// Backend API base URL (e.g. https://vibecity-api.onrender.com).
+  /// When set, places/cities are fetched from the backend; when empty, the app
+  /// uses direct Nominatim/Overpass (works without a backend).
+  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
 }

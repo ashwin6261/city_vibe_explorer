@@ -82,6 +82,18 @@ flutter build apk --release --dart-define=MAPTILER_KEY=YOUR_MAPTILER_KEY
 Or add `MAPTILER_KEY` as a GitHub repository secret (used by CI) / Render env var.
 When the key is empty, the app automatically falls back to CARTO tiles.
 
+## 🔌 Backend API (optional)
+
+After deploying the backend (Render → `render.yaml`), point the app at it for
+faster/cached city + place data:
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://vibecity-api.onrender.com
+```
+
+Or add `API_BASE_URL` as a GitHub Actions secret. When empty, the app uses
+direct Nominatim/Overpass (still fully functional).
+
 ### Prototyping with Maps Demo Key
 For zero-cost prototyping without a billing account, you can mint a free Maps Demo Key:
 1. Visit https://mapsplatform.google.com/maps-demo-key?utm_campaign=gmp_git_agentskills_v1

@@ -12,8 +12,11 @@ import 'location_service.dart';
 ///  - Nominatim geocoding (search any city / place)
 class PlacesService {
   final String? googleMapsApiKey;
+  final String? apiBaseUrl;
 
-  PlacesService({this.googleMapsApiKey});
+  PlacesService({this.googleMapsApiKey, this.apiBaseUrl});
+
+  bool get _hasBackend => apiBaseUrl != null && apiBaseUrl!.isNotEmpty;
 
   bool get _hasGoogleKey =>
       googleMapsApiKey != null && googleMapsApiKey!.isNotEmpty;
@@ -75,6 +78,11 @@ class PlacesService {
     required double longitude,
     double radiusMeters = 2500,
   }) async {
+    if (_hasBackend) {
+      final fromApi =
+          await _fetchNearbyFromBackend(latitude, longitude, radiusMeters);
+      if (fromApi.isNotEmpty) return fromApi;
+    }
     if (_hasGoogleKey) {
       final places = await fetchLiveNearbyPlaces(
         latitude: latitude,
@@ -140,6 +148,10 @@ class PlacesService {
   Future<List<Place>> searchLocations(String query, {int limit = 8}) async {
     final q = query.trim();
     if (q.isEmpty) return [];
+    if (_hasBackend) {
+      final fromApi = await _searchCitiesFromBackend(q, limit);
+      if (fromApi.isNotEmpty) return fromApi;
+    }
     try {
       final url = Uri.parse(
         'https://nominatim.openstreetmap.org/search'
@@ -167,6 +179,79 @@ class PlacesService {
               'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name.isEmpty ? q : name)}',
           address: (d['display_name'] ?? q).toString(),
           description: 'Search result for "$q".',
+          mustTry: 'Explore nearby',
+          openingHours: '',
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Place>> _fetchNearbyFromBackend(
+      double lat, double lng, double radius) async {
+    try {
+      final url = Uri.parse(
+        '$apiBaseUrl/api/places/nearby?lat=$lat&lng=$lng&radius=${radius.round()}&limit=50',
+      );
+      final response = await http.get(url).timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) return [];
+      final data = jsonDecode(response.body) as List;
+      return data.map((p) {
+        final name = (p['name'] ?? 'Place').toString();
+        final dist = p['distance_m'];
+        return Place(
+          id: 'db_${p['id'] ?? name}',
+          name: name,
+          category: (p['category'] ?? 'Place').toString(),
+          moods: const ['visual'],
+          latitude: (p['lat'] as num?)?.toDouble() ?? 0.0,
+          longitude: (p['lng'] as num?)?.toDouble() ?? 0.0,
+          rating: (p['rating'] as num?)?.toDouble() ?? 0.0,
+          userRatingsTotal: 0,
+          visualScore: 80,
+          imageUrl:
+              'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name)}',
+          address: (p['area'] ?? p['city'] ?? '').toString(),
+          description: (p['must_try'] ?? 'A local spot.').toString(),
+          mustTry: (p['must_try'] ?? 'Local special').toString(),
+          budgetInr: (p['budget_inr'] as int?) ?? 150,
+          pureVeg: p['is_pure_veg'] == true,
+          crowdStatus: (p['crowd_status'] ?? 'Moderate').toString(),
+          photoAngleTip: (p['photo_angle_tip'] ?? '').toString(),
+          bestTime: (p['best_time'] ?? '').toString(),
+          distanceInKm: dist is num ? dist / 1000.0 : null,
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Place>> _searchCitiesFromBackend(String q, int limit) async {
+    try {
+      final url = Uri.parse(
+        '$apiBaseUrl/api/cities?q=${Uri.encodeQueryComponent(q)}&limit=$limit',
+      );
+      final response = await http.get(url).timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) return [];
+      final data = jsonDecode(response.body) as List;
+      return data.map((c) {
+        final name = (c['name'] ?? q).toString();
+        return Place(
+          id: 'city_${c['lat']}_${c['lng']}',
+          name: name,
+          category: (c['type'] ?? 'City').toString(),
+          moods: const ['visual'],
+          latitude: (c['lat'] as num?)?.toDouble() ?? 0.0,
+          longitude: (c['lng'] as num?)?.toDouble() ?? 0.0,
+          rating: 0,
+          userRatingsTotal: 0,
+          visualScore: 0,
+          imageUrl:
+              'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name)}',
+          address: (c['state'] ?? '').toString(),
+          description: 'City / place',
           mustTry: 'Explore nearby',
           openingHours: '',
         );

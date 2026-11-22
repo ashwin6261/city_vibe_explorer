@@ -24,6 +24,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   final MapController _mapController = MapController();
   final PlacesService _placesService = PlacesService(
     googleMapsApiKey: AppConfig.googleMapsApiKey,
+    apiBaseUrl: AppConfig.apiBaseUrl,
   );
   final TextEditingController _searchController = TextEditingController();
 
