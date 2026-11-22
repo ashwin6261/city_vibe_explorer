@@ -78,10 +78,33 @@ class PlaceDetailModal extends StatelessWidget {
       onPressed: () => _open(context, url),
       icon: Icon(icon, color: color, size: 20),
       label: Text(label,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _infoChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withAlpha(26),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600, color: color),
+          ),
+        ],
       ),
     );
   }
@@ -227,6 +250,43 @@ class PlaceDetailModal extends StatelessWidget {
                     )
                   ],
                 ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _infoChip(Icons.currency_rupee, '₹${place.budgetInr}', Colors.green),
+                    if (place.pureVeg) _infoChip(Icons.eco, 'Pure Veg', Colors.green),
+                    _infoChip(Icons.groups, place.crowdStatus, Colors.orange),
+                    if (place.bestTime.isNotEmpty)
+                      _infoChip(Icons.schedule, place.bestTime, Colors.blue),
+                  ],
+                ),
+                if (place.photoAngleTip.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.camera_alt, color: Colors.purple, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Photo tip: ${place.photoAngleTip}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.purple.shade900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Must-try highlight box
@@ -271,7 +331,7 @@ class PlaceDetailModal extends StatelessWidget {
 
                 // Videos (YouTube / Facebook)
                 const Text(
-                  'VIDEOS',
+                  'REELS & VIDEOS',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -291,7 +351,18 @@ class PlaceDetailModal extends StatelessWidget {
                             'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent('${place.name} ${place.address}')}',
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _linkButton(
+                        context,
+                        icon: Icons.photo_camera,
+                        label: 'Instagram',
+                        color: Colors.purple,
+                        url:
+                            'https://www.instagram.com/explore/search/keyword/?q=${Uri.encodeQueryComponent('${place.name} ${place.address}')}',
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: _linkButton(
                         context,

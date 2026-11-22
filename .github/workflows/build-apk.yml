@@ -61,8 +61,8 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0
-          name: "City Vibe Explorer v1.1.0 APK"
+          tag_name: v1.2.0
+          name: "City Vibe Explorer v1.2.0 APK"
           body: "Direct Android APK download for City Vibe Explorer. Install on any Android device to explore visual street food and top sights!"
           files: build/app/outputs/flutter-apk/app-release.apk
         env:

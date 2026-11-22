@@ -1,9 +1,37 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permissions required for location tracking and map access -->
+    <!-- Core Network & API Access (Reels streaming, Maps, Ratings) -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Geolocation & Nearby Chaupati / Hotspot Radar -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- Push Notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Camera & Media Storage (submit photos / save passes) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+
+    <!-- Haptic Feedback -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- Hardware features (do not filter devices without GPS/camera) -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
+    <!-- Android 11+ package visibility so "Watch on IG/FB/YT" and "Open in Maps"
+         launch the native apps directly. -->
+    <queries>
+        <package android:name="com.instagram.android"/>
+        <package android:name="com.facebook.katana"/>
+        <package android:name="com.google.android.youtube"/>
+        <package android:name="com.google.android.apps.maps"/>
+        <package android:name="com.ubercab"/>
+    </queries>
 
     <application
         android:label="City Vibe Explorer"
@@ -31,4 +59,3 @@
             android:value="2" />
     </application>
 </manifest>
-

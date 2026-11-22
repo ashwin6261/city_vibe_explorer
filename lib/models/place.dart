@@ -1,3 +1,20 @@
+/// A short-form social video attached to a place (YouTube Short / IG Reel / FB Reel).
+class Reel {
+  final String platform; // 'YouTube Short', 'Instagram Reel', 'Facebook Reel'
+  final String url;
+  final String? thumbnail;
+  final String? creator;
+  final String? caption;
+
+  const Reel({
+    required this.platform,
+    required this.url,
+    this.thumbnail,
+    this.creator,
+    this.caption,
+  });
+}
+
 /// Data model representing a place of interest, such as visual food stalls,
 /// heritage monuments, viewpoint cafes, vibrant bazaars, or any nearby POI.
 class Place {
@@ -21,6 +38,12 @@ class Place {
   final String? videoUrl; // optional direct video (YouTube) link
   final String? website;
   final String? phone;
+  final int budgetInr; // pocket-pinch estimate (₹)
+  final bool pureVeg;
+  final String crowdStatus; // 'Quiet', 'Moderate', 'Crowded'
+  final String photoAngleTip;
+  final String bestTime;
+  final List<Reel> reels; // short-form social videos
 
   double? distanceInKm;
 
@@ -45,6 +68,12 @@ class Place {
     this.videoUrl,
     this.website,
     this.phone,
+    this.budgetInr = 150,
+    this.pureVeg = false,
+    this.crowdStatus = 'Moderate',
+    this.photoAngleTip = '',
+    this.bestTime = '',
+    this.reels = const [],
     this.distanceInKm,
   });
 
@@ -73,6 +102,12 @@ class Place {
       videoUrl: videoUrl,
       website: website,
       phone: phone,
+      budgetInr: budgetInr,
+      pureVeg: pureVeg,
+      crowdStatus: crowdStatus,
+      photoAngleTip: photoAngleTip,
+      bestTime: bestTime,
+      reels: reels,
       distanceInKm: distanceInKm ?? this.distanceInKm,
     );
   }
@@ -221,6 +256,12 @@ class Place {
       placeId: osmId?.toString(),
       website: (tags['website'] ?? tags['contact:website'])?.toString(),
       phone: (tags['phone'] ?? tags['contact:phone'])?.toString(),
+      budgetInr: 150,
+      pureVeg: tags['diet:vegetarian'] == 'yes' || tags['vegetarian'] == 'yes',
+      crowdStatus: 'Moderate',
+      photoAngleTip: '',
+      bestTime: (tags['opening_hours'] ?? '').toString(),
+      reels: const [],
     );
   }
 
