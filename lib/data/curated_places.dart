@@ -224,7 +224,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 54000,
     visualScore: 97,
-    imageUrl: 'https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?w=800&q=80',
+    imageUrl: 'https://picsum.photos/seed/jal-mahal-jaipur/800/600',
     address: 'Amer Road, Man Sagar Lake, Jaipur',
     description:
         'Enchanting palace appearing to float in the middle of Man Sagar Lake. The lakeside promenade is lively with street musicians and roasted corn stalls.',
@@ -245,7 +245,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 8400,
     visualScore: 92,
-    imageUrl: 'https://images.unsplash.com/photo-1505253758473-96b46deae6f9?w=800&q=80',
+    imageUrl: 'https://picsum.photos/seed/pandit-kulfi-jaipur/800/600',
     address: 'Near Hawa Mahal, Sireh Deori Bazaar, Jaipur',
     description:
         'Famous heritage kulfi cart serving rich Rabdi, Kesar Pista, and Paan kulfi freshly cut from earthen moulds onto green leaves.',

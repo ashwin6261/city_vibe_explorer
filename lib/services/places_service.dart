@@ -12,15 +12,19 @@ class PlacesService {
 
   PlacesService({this.googleMapsApiKey});
 
-  /// Retrieve places matching the active mood filter and sorted by proximity or popularity
+  /// Retrieve places matching the active mood filter and sorted by proximity.
+  ///
+  /// [extraPlaces] lets callers merge live API results with the curated set
+  /// before filtering, so both sources respect the same mood/flag filters.
   List<Place> getPlaces({
     String? selectedMood,
     bool onlyVisualFood = false,
     bool onlyTopVisited = false,
     double? userLat,
     double? userLng,
+    List<Place> extraPlaces = const [],
   }) {
-    List<Place> results = List.from(jaipurCuratedPlaces);
+    List<Place> results = [...jaipurCuratedPlaces, ...extraPlaces];
 
     // Filter by mood if specified
     if (selectedMood != null && selectedMood.isNotEmpty && selectedMood != 'all') {
@@ -37,24 +41,34 @@ class PlacesService {
       results = results.where((place) => place.isTopVisited).toList();
     }
 
-    // Update distance from user if user location is available
+    // Compute distance from user without mutating the shared place objects,
+    // then sort primarily by proximity when a location is available.
     if (userLat != null && userLng != null) {
-      for (var place in results) {
-        place.distanceInKm = LocationService.calculateDistanceInKm(
+      final List<Place> withDistance = results.map((place) {
+        final double km = LocationService.calculateDistanceInKm(
           userLat,
           userLng,
           place.latitude,
           place.longitude,
         );
-      }
-      // Sort primarily by proximity when moving around
-      results.sort((a, b) => (a.distanceInKm ?? 999).compareTo(b.distanceInKm ?? 999));
+        return place.copyWith(distanceInKm: km);
+      }).toList();
+
+      withDistance.sort(
+        (a, b) => (a.distanceInKm ?? double.infinity)
+            .compareTo(b.distanceInKm ?? double.infinity),
+      );
+      return withDistance;
     }
 
     return results;
   }
 
-  /// Live Google Places API (New) - Search Nearby for live street food and attractions
+  /// Live Google Places API (New) - Search Nearby for live street food and attractions.
+  ///
+  /// Returns only the freshly fetched live places (empty when no API key is
+  /// configured or on any error) so the caller can merge + filter them with
+  /// the curated data through a single [getPlaces] call.
   Future<List<Place>> fetchLiveNearbyPlaces({
     required double latitude,
     required double longitude,
@@ -62,8 +76,7 @@ class PlacesService {
     List<String> includedTypes = const ['restaurant', 'tourist_attraction', 'bakery', 'cafe'],
   }) async {
     if (googleMapsApiKey == null || googleMapsApiKey!.isEmpty) {
-      // Returns curated spots when API key is not yet configured
-      return getPlaces(userLat: latitude, userLng: longitude);
+      return [];
     }
 
     try {
@@ -74,7 +87,7 @@ class PlacesService {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': googleMapsApiKey!,
           'X-Goog-FieldMask':
-              'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types',
+              'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount',
         },
         body: jsonEncode({
           'includedTypes': includedTypes,
@@ -91,17 +104,12 @@ class PlacesService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List placesJson = data['places'] ?? [];
-        final livePlaces = placesJson.map((p) => Place.fromGooglePlace(p)).toList();
-
-        // Merge with curated places
-        final curated = getPlaces(userLat: latitude, userLng: longitude);
-        return [...curated, ...livePlaces];
+        return placesJson.map((p) => Place.fromGooglePlace(p)).toList();
       }
     } catch (_) {
-      // Graceful fallback to curated places
+      // Graceful fallback: caller keeps curated-only results.
     }
 
-    return getPlaces(userLat: latitude, userLng: longitude);
+    return [];
   }
 }
-

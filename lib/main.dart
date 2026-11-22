@@ -21,7 +21,6 @@ class CityVibeExplorerApp extends StatelessWidget {
           secondary: const Color(0xFF2979FF),
         ),
         useMaterial3: true,
-        fontFamily: 'Roboto',
       ),
       home: const MapExplorerScreen(),
     );

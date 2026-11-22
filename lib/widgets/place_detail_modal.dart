@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/place.dart';
 
 /// Swipe-up rich modal bottom sheet showcasing visual photo, must-try food,
@@ -18,13 +19,23 @@ class PlaceDetailModal extends StatelessWidget {
     );
   }
 
-  Future<void> _launchGoogleMapsNavigation() async {
+  Future<void> _launchGoogleMapsNavigation(BuildContext context) async {
     final lat = place.latitude;
     final lng = place.longitude;
-    // Launch turn-by-turn navigation in Google Maps
     final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    String? error;
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        error = 'Could not open Google Maps on this device.';
+      }
+    } catch (e) {
+      error = 'Navigation failed: $e';
+    }
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
     }
   }
 
@@ -55,11 +66,23 @@ class PlaceDetailModal extends StatelessWidget {
           // Header image with overlay tags
           Stack(
             children: [
-              Image.network(
-                place.imageUrl,
+              CachedNetworkImage(
+                imageUrl: place.imageUrl,
                 height: 220,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                placeholder: (_, __) => Container(
+                  height: 220,
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                errorWidget: (_, __, ___) => Container(
+                  height: 220,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.image, size: 40, color: Colors.grey),
+                ),
               ),
               Positioned(
                 top: 12,
@@ -67,7 +90,7 @@ class PlaceDetailModal extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.75),
+                    color: Colors.black.withAlpha(191),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -239,7 +262,7 @@ class PlaceDetailModal extends StatelessWidget {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton.icon(
-                    onPressed: _launchGoogleMapsNavigation,
+                    onPressed: () => _launchGoogleMapsNavigation(context),
                     icon: const Icon(Icons.directions_rounded),
                     label: const Text(
                       'Navigate in Google Maps',
@@ -264,4 +287,3 @@ class PlaceDetailModal extends StatelessWidget {
     );
   }
 }
-

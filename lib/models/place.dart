@@ -42,6 +42,32 @@ class Place {
     this.distanceInKm,
   });
 
+  /// Creates a copy of this place with an updated (computed) distance.
+  /// Used so per-frame distance recalculation never mutates the shared,
+  /// globally cached curated place objects.
+  Place copyWith({double? distanceInKm}) {
+    return Place(
+      id: id,
+      name: name,
+      category: category,
+      moods: moods,
+      latitude: latitude,
+      longitude: longitude,
+      rating: rating,
+      userRatingsTotal: userRatingsTotal,
+      visualScore: visualScore,
+      imageUrl: imageUrl,
+      address: address,
+      description: description,
+      mustTry: mustTry,
+      isVisualFoodStall: isVisualFoodStall,
+      isTopVisited: isTopVisited,
+      openingHours: openingHours,
+      placeId: placeId,
+      distanceInKm: distanceInKm ?? this.distanceInKm,
+    );
+  }
+
   factory Place.fromGooglePlace(Map<String, dynamic> json) {
     final location = json['location'] ?? json['geometry']?['location'] ?? {};
     final lat = (location['latitude'] ?? location['lat'] ?? 0.0).toDouble();

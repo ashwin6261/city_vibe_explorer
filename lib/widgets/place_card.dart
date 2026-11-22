@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/place.dart';
 
 class PlaceCard extends StatelessWidget {
@@ -25,7 +26,7 @@ class PlaceCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: Colors.black.withAlpha(31),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -39,12 +40,16 @@ class PlaceCard extends StatelessWidget {
               // Photo Header with Badges
               Stack(
                 children: [
-                  Image.network(
-                    place.imageUrl,
+                  CachedNetworkImage(
+                    imageUrl: place.imageUrl,
                     height: 120,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    placeholder: (_, __) => Container(
+                      height: 120,
+                      color: Colors.grey.shade200,
+                    ),
+                    errorWidget: (_, __, ___) => Container(
                       height: 120,
                       color: Colors.grey.shade300,
                       child: const Icon(Icons.image, size: 40, color: Colors.grey),
@@ -58,7 +63,7 @@ class PlaceCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.75),
+                        color: Colors.black.withAlpha(191),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

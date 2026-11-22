@@ -100,7 +100,7 @@ class MoodSelectorBar extends StatelessWidget {
                 ),
                 selected: isSelected,
                 selectedColor: mood.color,
-                backgroundColor: Colors.white.withOpacity(0.92),
+                backgroundColor: Colors.white.withAlpha(235),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
@@ -131,11 +131,11 @@ class MoodSelectorBar extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.white.withOpacity(0.95),
+          color: isActive ? activeColor : Colors.white.withAlpha(242),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withAlpha(20),
               blurRadius: 6,
               offset: const Offset(0, 2),
             )

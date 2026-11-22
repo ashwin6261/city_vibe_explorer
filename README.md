@@ -43,20 +43,30 @@ Once you have the Flutter SDK installed:
 ```bash
 cd city_vibe_explorer
 flutter pub get
-flutter run
+flutter run --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
 ```
+> The key is optional for a first run: without it the app still works with the curated
+> Jaipur data (the native map simply renders unkeyed). See the key section below.
 
 ---
 
 ## 🔑 Google Maps API Key Configuration
 
-### Android
-In `android/app/src/main/AndroidManifest.xml`:
-```xml
-<meta-data
-    android:name="com.google.android.geo.API_KEY"
-    android:value="YOUR_GOOGLE_MAPS_API_KEY"/>
+The key is **never** stored in source control. It is injected at build time:
+
+```bash
+flutter run   --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
+flutter build apk --release --dart-define=GOOGLE_MAPS_API_KEY=YOUR_KEY
 ```
+
+- `lib/config/app_config.dart` reads it via `String.fromEnvironment` for the **Places (New)** API.
+- `android/app/build.gradle` reads the `GOOGLE_MAPS_API_KEY` **Gradle property / env var** and
+  forwards it to `AndroidManifest.xml` as the `${GOOGLE_MAPS_API_KEY}` placeholder for the
+  native **Maps SDK**.
+- In CI it comes from the `GOOGLE_MAPS_API_KEY` repository secret
+  (`.github/workflows/build-apk.yml`).
+
+Restrict the key by Android package name `com.example.city_vibe_explorer` and SHA-1 fingerprint.
 
 ### Prototyping with Maps Demo Key
 For zero-cost prototyping without a billing account, you can mint a free Maps Demo Key:
