@@ -15,3 +15,5 @@ android/app/build/
 *.iml
 .DS_Store
 Thumbs.db
+
+.github/
