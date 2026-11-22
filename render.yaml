@@ -1,0 +1,49 @@
+# VibeCity — Render Blueprint
+# Deploy: push to GitHub, then in Render click "New → Blueprint" and pick this repo.
+# Render provisions the Postgres (PostGIS) database, the Dockerized API, and the PWA.
+
+databases:
+  - name: vibecity-db
+    plan: free
+    databaseName: vibecity
+    user: vibecity
+
+services:
+  # ---- Backend API (Node + Express + PostGIS) ----
+  - type: web
+    name: vibecity-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTO_MIGRATE
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vibecity-db
+          property: connectionString
+      - key: DATABASE_SSL
+        value: "true"
+      # Optional — add these in the Render dashboard to enable live data:
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: META_OAUTH_TOKEN
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+
+  # ---- PWA frontend (static) ----
+  - type: web
+    name: vibecity-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: ""
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600

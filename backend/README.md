@@ -46,9 +46,10 @@ curl -X POST http://localhost:3000/api/reels/oembed \
 
 ## Deploy (Render)
 1. Push this repo to GitHub.
-2. In Render: **New → Blueprint** → select the repo → it reads `render.yaml`.
-3. Add `DATABASE_URL` (Render Postgres) and optional `YOUTUBE_API_KEY`, `META_OAUTH_TOKEN`, `GOOGLE_MAPS_API_KEY`.
-4. Deploy — health check at `/health`.
+2. In Render: **New → Blueprint** → select the repo → it reads the repo-root **`render.yaml`**.
+3. Render provisions a **Postgres (PostGIS)** database, the **Dockerized API** (`vibecity-api`), and the **PWA** (`vibecity-web`) automatically.
+4. Add optional `YOUTUBE_API_KEY`, `META_OAUTH_TOKEN`, `GOOGLE_MAPS_API_KEY` in the dashboard to enable live data.
+5. Deploy — health check at `/health`. The schema auto-creates on boot (`AUTO_MIGRATE=true`); run `npm run seed` in the Render Shell to load starter places.
 
 ## Environment
 | Var | Required | Purpose |
