@@ -49,4 +49,33 @@ void main() {
       expect(p.isVisualFoodStall, isTrue);
     });
   });
+
+  group('Place.fromOverpass', () {
+    test('derives category, moods, rating from tags', () {
+      final Place p = Place.fromOverpass({
+        'type': 'node',
+        'id': 123,
+        'lat': 26.9,
+        'lon': 75.8,
+        'tags': {'name': 'Some Museum', 'tourism': 'museum', 'wikidata': 'Q1'},
+      });
+      expect(p.name, 'Some Museum');
+      expect(p.category.toLowerCase(), contains('museum'));
+      expect(p.moods, contains('heritage'));
+      expect(p.rating, greaterThan(0));
+      expect(p.visualScore, greaterThan(0));
+    });
+
+    test('restaurant is a foodie visual food stall', () {
+      final Place p = Place.fromOverpass({
+        'type': 'way',
+        'id': 9,
+        'center': {'lat': 26.9, 'lon': 75.8},
+        'tags': {'name': 'Dhaba', 'amenity': 'restaurant', 'cuisine': 'indian'},
+      });
+      expect(p.latitude, 26.9);
+      expect(p.moods, contains('foodie'));
+      expect(p.isVisualFoodStall, isTrue);
+    });
+  });
 }

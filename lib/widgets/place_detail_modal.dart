@@ -39,6 +39,43 @@ class PlaceDetailModal extends StatelessWidget {
     }
   }
 
+  Future<void> _open(BuildContext context, String url) async {
+    try {
+      final launched =
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link on this device.')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open link on this device.')),
+        );
+      }
+    }
+  }
+
+  Widget _linkButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required String url,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: () => _open(context, url),
+      icon: Icon(icon, color: color, size: 20),
+      label: Text(label,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -220,6 +257,43 @@ class PlaceDetailModal extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
+                // Videos (YouTube / Facebook)
+                const Text(
+                  'VIDEOS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepOrange,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _linkButton(
+                        context,
+                        icon: Icons.play_circle_fill,
+                        label: 'YouTube',
+                        color: Colors.red,
+                        url: place.videoUrl ??
+                            'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent('${place.name} ${place.address}')}',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _linkButton(
+                        context,
+                        icon: Icons.facebook,
+                        label: 'Facebook',
+                        color: Colors.blue,
+                        url:
+                            'https://www.facebook.com/search/videos/?q=${Uri.encodeQueryComponent(place.name)}',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
                 // Description
                 Text(
                   place.description,
@@ -255,6 +329,40 @@ class PlaceDetailModal extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (place.website != null && place.website!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.language, size: 18, color: Colors.purple),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          place.website!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        onPressed: () => _open(context, place.website!),
+                      ),
+                    ],
+                  ),
+                ],
+                if (place.phone != null && place.phone!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone, size: 18, color: Colors.teal),
+                      const SizedBox(width: 8),
+                      Text(
+                        place.phone!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 24),
 
                 // Action Buttons

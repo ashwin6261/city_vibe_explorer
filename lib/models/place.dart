@@ -1,5 +1,5 @@
 /// Data model representing a place of interest, such as visual food stalls,
-/// heritage monuments, viewpoint cafes, and vibrant bazaars.
+/// heritage monuments, viewpoint cafes, vibrant bazaars, or any nearby POI.
 class Place {
   final String id;
   final String name;
@@ -17,7 +17,10 @@ class Place {
   final bool isVisualFoodStall;
   final bool isTopVisited;
   final String openingHours;
-  final String? placeId; // Google Places Place ID for live API syncing
+  final String? placeId; // Google Places Place ID / OSM id for live API syncing
+  final String? videoUrl; // optional direct video (YouTube) link
+  final String? website;
+  final String? phone;
 
   double? distanceInKm;
 
@@ -39,6 +42,9 @@ class Place {
     this.isTopVisited = false,
     this.openingHours = 'Open today: 9:00 AM – 9:00 PM',
     this.placeId,
+    this.videoUrl,
+    this.website,
+    this.phone,
     this.distanceInKm,
   });
 
@@ -64,6 +70,9 @@ class Place {
       isTopVisited: isTopVisited,
       openingHours: openingHours,
       placeId: placeId,
+      videoUrl: videoUrl,
+      website: website,
+      phone: phone,
       distanceInKm: distanceInKm ?? this.distanceInKm,
     );
   }
@@ -110,13 +119,108 @@ class Place {
       userRatingsTotal: userRatingsTotal,
       visualScore: (rating * 18).clamp(60, 99).toInt(),
       imageUrl: 'https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?w=800&q=80',
-      address: json['formattedAddress'] ?? json['vicinity'] ?? 'Jaipur, Rajasthan',
+      address: json['formattedAddress'] ?? json['vicinity'] ?? 'Nearby',
       description: 'Popular spot retrieved from Google Places.',
       mustTry: 'Local Chef Special',
       isVisualFoodStall: isFood,
       isTopVisited: userRatingsTotal > 2000,
       placeId: json['id'] ?? json['place_id'],
+      website: json['website']?.toString(),
+      phone: (json['internationalPhoneNumber'] ?? json['nationalPhoneNumber'])?.toString(),
     );
   }
-}
 
+  /// Builds a [Place] from an OpenStreetMap Overpass element.
+  ///
+  /// OSM has no star ratings, so a deterministic visual/quality score is
+  /// derived from tags (wikidata/wikipedia/image/tourism/historic/cuisine) and
+  /// surfaced as both `visualScore` and a derived `rating` (score / 20).
+  factory Place.fromOverpass(Map<String, dynamic> element) {
+    final tags = (element['tags'] as Map?)?.cast<String, dynamic>() ??
+        <String, dynamic>{};
+    final type = element['type']?.toString() ?? 'node';
+    final osmId = element['id'];
+    final lat = (element['lat'] ?? element['center']?['lat'] ?? 0.0).toDouble();
+    final lng = (element['lon'] ?? element['center']?['lon'] ?? 0.0).toDouble();
+
+    final name = (tags['name:en'] ?? tags['name'] ?? 'Local Spot').toString();
+    final amenity = (tags['amenity'] ?? '').toString();
+    final tourism = (tags['tourism'] ?? '').toString();
+    final leisure = (tags['leisure'] ?? '').toString();
+    final historic = (tags['historic'] ?? '').toString();
+    final cuisine = (tags['cuisine'] ?? '').toString();
+    final shop = (tags['shop'] ?? '').toString();
+
+    String category;
+    if (tourism.isNotEmpty) {
+      category = tourism;
+    } else if (amenity.isNotEmpty) {
+      category = amenity;
+    } else if (historic.isNotEmpty) {
+      category = 'Historic Site';
+    } else if (leisure.isNotEmpty) {
+      category = leisure;
+    } else if (shop.isNotEmpty) {
+      category = shop;
+    } else {
+      category = 'Place';
+    }
+    category = category.replaceAll('_', ' ');
+    category = category[0].toUpperCase() + category.substring(1);
+
+    final moods = <String>['visual'];
+    if (amenity.isNotEmpty || cuisine.isNotEmpty) moods.add('foodie');
+    if (tourism == 'museum' || tourism == 'gallery' || historic.isNotEmpty) {
+      moods.add('heritage');
+    }
+    if (leisure == 'park' || tourism == 'viewpoint') moods.add('chill');
+    if (shop.isNotEmpty || tourism == 'gallery' || tourism == 'artwork') {
+      moods.add('shopping');
+    }
+    if (amenity == 'bar' || amenity == 'pub') moods.add('nightlife');
+
+    final score = _visualScoreFromTags(tags);
+    final rating = double.parse((score / 20.0).clamp(1.0, 5.0).toStringAsFixed(1));
+
+    final addressParts = <String>[
+      tags['addr:street']?.toString() ?? '',
+      tags['addr:city']?.toString() ?? '',
+      tags['addr:country']?.toString() ?? '',
+    ].where((e) => e.isNotEmpty).toList();
+
+    return Place(
+      id: 'osm_${type}_$osmId',
+      name: name,
+      category: category,
+      moods: moods,
+      latitude: lat,
+      longitude: lng,
+      rating: rating,
+      userRatingsTotal: 0,
+      visualScore: score,
+      imageUrl:
+          'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name)}',
+      address: addressParts.isEmpty ? 'Nearby' : addressParts.join(', '),
+      description: (tags['description'] ?? 'A notable place near you.').toString(),
+      mustTry: cuisine.isNotEmpty ? 'Try the local $cuisine' : 'Explore & discover',
+      isVisualFoodStall:
+          amenity == 'fast_food' || amenity == 'cafe' || amenity == 'food_court',
+      isTopVisited: false,
+      openingHours: (tags['opening_hours'] ?? 'See on map').toString(),
+      placeId: osmId?.toString(),
+      website: (tags['website'] ?? tags['contact:website'])?.toString(),
+      phone: (tags['phone'] ?? tags['contact:phone'])?.toString(),
+    );
+  }
+
+  static int _visualScoreFromTags(Map<String, dynamic> tags) {
+    int score = 55;
+    if (tags['wikidata'] != null) score += 15;
+    if (tags['wikipedia'] != null) score += 10;
+    if (tags['image'] != null) score += 10;
+    if (tags['tourism'] == 'attraction' || tags['tourism'] == 'museum') score += 10;
+    if (tags['historic'] != null) score += 8;
+    if (tags['cuisine'] != null) score += 5;
+    return score.clamp(40, 99);
+  }
+}

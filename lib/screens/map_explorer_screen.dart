@@ -25,6 +25,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   final PlacesService _placesService = PlacesService(
     googleMapsApiKey: AppConfig.googleMapsApiKey,
   );
+  final TextEditingController _searchController = TextEditingController();
 
   // Active filters
   String _selectedMood = 'all';
@@ -38,11 +39,13 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   Position? _currentPosition;
   bool _hasLocationPermission = false;
   StreamSubscription<Position>? _positionStreamSubscription;
-  bool _isFetchingLive = false;
+  bool _isFetching = false;
   late final PageController _pageController;
 
-  // Default map target: Jaipur center
-  static const LatLng _initialCenter = LatLng(26.9196, 75.8115);
+  // Current map center (updated on search / location / recenter).
+  // Starts on the curated Jaipur demo; search jumps anywhere in the world.
+  static const LatLng _jaipurCenter = LatLng(26.9196, 75.8115);
+  LatLng _mapCenter = _jaipurCenter;
 
   @override
   void initState() {
@@ -55,27 +58,24 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   @override
   void dispose() {
     _positionStreamSubscription?.cancel();
+    _searchController.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
-  /// Initialize real-time location tracking as the user moves around the city.
-  ///
-  /// Permission is resolved first; the position stream is only subscribed when
-  /// permission is actually granted (and carries an explicit error handler), so
-  /// a denied/unavailable sensor can never throw an unhandled exception.
   Future<void> _initLocationTracking() async {
     final granted = await LocationService.handlePermission();
     if (!mounted) return;
     setState(() => _hasLocationPermission = granted);
-
     if (!granted) return;
 
     final pos = await LocationService.getCurrentLocation();
     if (pos != null && mounted) {
       setState(() => _currentPosition = pos);
+      _mapCenter = LatLng(pos.latitude, pos.longitude);
+      _moveTo(_mapCenter, 13.5);
       _loadPlaces();
-      unawaited(_fetchLivePlaces(pos));
+      unawaited(_fetchNearby(pos.latitude, pos.longitude));
     }
 
     _positionStreamSubscription = LocationService.getPositionStream().listen(
@@ -91,20 +91,42 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     );
   }
 
-  /// Fetch live Google Places once a location is available and merge them in.
-  Future<void> _fetchLivePlaces(Position pos) async {
-    if (AppConfig.googleMapsApiKey.isEmpty || _isFetchingLive) return;
-    setState(() => _isFetchingLive = true);
-    final live = await _placesService.fetchLiveNearbyPlaces(
-      latitude: pos.latitude,
-      longitude: pos.longitude,
-    );
+  /// Fetch places near a coordinate (Google if keyed, else OpenStreetMap).
+  Future<void> _fetchNearby(double lat, double lng) async {
+    if (_isFetching) return;
+    setState(() => _isFetching = true);
+    final places = await _placesService.fetchNearby(latitude: lat, longitude: lng);
     if (!mounted) return;
     setState(() {
-      _livePlaces = live;
-      _isFetchingLive = false;
+      _livePlaces = places;
+      _isFetching = false;
     });
     _loadPlaces();
+  }
+
+  /// Geocode a search query and jump the map + place list to that area.
+  Future<void> _onSearch(String query) async {
+    FocusScope.of(context).unfocus();
+    final result = await _placesService.searchLocation(query);
+    if (!mounted) return;
+    if (result == null) {
+      _showMessage('No place found for "$query".');
+      return;
+    }
+    setState(() => _mapCenter = LatLng(result.latitude, result.longitude));
+    _moveTo(_mapCenter, 13.5);
+    await _fetchNearby(result.latitude, result.longitude);
+    if (mounted) _showMessage('Showing places near ${result.name}');
+  }
+
+  bool _isNearJaipur() {
+    final d = LocationService.calculateDistanceInKm(
+      _mapCenter.latitude,
+      _mapCenter.longitude,
+      LocationService.defaultLat,
+      LocationService.defaultLng,
+    );
+    return d < 40;
   }
 
   void _loadPlaces() {
@@ -112,9 +134,10 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
       selectedMood: _selectedMood,
       onlyVisualFood: _onlyVisualFood,
       onlyTopVisited: _onlyTopVisited,
-      userLat: _currentPosition?.latitude ?? LocationService.defaultLat,
-      userLng: _currentPosition?.longitude ?? LocationService.defaultLng,
+      userLat: _mapCenter.latitude,
+      userLng: _mapCenter.longitude,
       extraPlaces: _livePlaces,
+      includeCurated: _isNearJaipur(),
     );
 
     if (!mounted) return;
@@ -127,7 +150,6 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   void _updateMarkers() {
     final markers = <Marker>[];
 
-    // User location marker
     if (_currentPosition != null) {
       markers.add(
         Marker(
@@ -139,10 +161,8 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
       );
     }
 
-    // Place markers
     for (int i = 0; i < _filteredPlaces.length; i++) {
       final place = _filteredPlaces[i];
-      // Colour code: Orange = Visual Food Stall, Amber = Top Visited, Purple = other.
       final Color color = place.isVisualFoodStall
           ? Colors.deepOrange
           : (place.isTopVisited ? Colors.amber : Colors.deepPurple);
@@ -166,22 +186,20 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     _markers = markers;
   }
 
-  /// Safely move the map camera (no-op if the controller is not attached yet).
   void _moveTo(LatLng target, double zoom) {
     try {
       _mapController.move(target, zoom);
     } catch (_) {
-      // Map not laid out yet; ignore.
+      // Map not laid out yet.
     }
   }
 
   Future<void> _recenterOnUser() async {
     final lat = _currentPosition?.latitude ?? LocationService.defaultLat;
     final lng = _currentPosition?.longitude ?? LocationService.defaultLng;
-    _moveTo(LatLng(lat, lng), 14.5);
-    if (_currentPosition != null) {
-      unawaited(_fetchLivePlaces(_currentPosition!));
-    }
+    setState(() => _mapCenter = LatLng(lat, lng));
+    _moveTo(_mapCenter, 14.5);
+    await _fetchNearby(lat, lng);
   }
 
   Future<void> _navigateToPlace(Place place) async {
@@ -194,9 +212,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
         _showMessage('Could not open Google Maps on this device.');
       }
     } catch (error) {
-      if (mounted) {
-        _showMessage('Navigation failed: $error');
-      }
+      if (mounted) _showMessage('Navigation failed: $error');
     }
   }
 
@@ -209,11 +225,11 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Interactive OpenStreetMap (no API key required)
+          // 1. Interactive OpenStreetMap (works anywhere, no API key)
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              initialCenter: _initialCenter,
+              initialCenter: _mapCenter,
               initialZoom: 13.5,
             ),
             children: [
@@ -225,15 +241,23 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
             ],
           ),
 
-          // 2. Top Header with City Vibe branding and Mood Filter Carousel
+          // Loading bar
+          if (_isFetching)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+
+          // 2. Top search + mood filters
           SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Search & City Title Bar
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
@@ -247,29 +271,20 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.explore, color: Colors.deepOrange),
-                      const SizedBox(width: 10),
+                      const Icon(Icons.search, color: Colors.deepOrange),
+                      const SizedBox(width: 8),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Exploring Jaipur',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            Text(
-                              _isFetchingLive
-                                  ? 'Finding live spots nearby...'
-                                  : 'Visual food stalls & top visited spots',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
+                        child: TextField(
+                          controller: _searchController,
+                          onSubmitted: _onSearch,
+                          textInputAction: TextInputAction.search,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: const InputDecoration(
+                            hintText: 'Search any city or place...',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -281,27 +296,20 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
                   ),
                 ),
 
-                // Mood Filters Bar
                 MoodSelectorBar(
                   selectedMood: _selectedMood,
                   onlyVisualFood: _onlyVisualFood,
                   onlyTopVisited: _onlyTopVisited,
                   onSelectMood: (mood) {
-                    setState(() {
-                      _selectedMood = mood;
-                    });
+                    setState(() => _selectedMood = mood);
                     _loadPlaces();
                   },
                   onToggleVisualFood: (val) {
-                    setState(() {
-                      _onlyVisualFood = val;
-                    });
+                    setState(() => _onlyVisualFood = val);
                     _loadPlaces();
                   },
                   onToggleTopVisited: (val) {
-                    setState(() {
-                      _onlyTopVisited = val;
-                    });
+                    setState(() => _onlyTopVisited = val);
                     _loadPlaces();
                   },
                 ),
@@ -309,7 +317,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
             ),
           ),
 
-          // 3. Floating Bottom Place Cards Carousel (or empty state)
+          // 3. Bottom place cards (sorted by rating) or empty state
           if (_filteredPlaces.isNotEmpty)
             Positioned(
               bottom: 24,
@@ -353,11 +361,11 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.filter_alt_off_rounded, color: Colors.deepOrange),
+                    const Icon(Icons.search, color: Colors.deepOrange),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
-                        'No spots match these filters. Try another vibe or clear the toggles.',
+                        'Search for a city or place above, or enable location to discover spots near you.',
                         style: TextStyle(fontSize: 13, color: Colors.black87),
                       ),
                     ),

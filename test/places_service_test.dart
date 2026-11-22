@@ -23,14 +23,11 @@ void main() {
       expect(results.every((p) => p.isTopVisited), isTrue);
     });
 
-    test('sorts by distance ascending when user location is provided', () {
-      final results = service.getPlaces(userLat: 26.9196, userLng: 75.8115);
+    test('sorts by star rating descending', () {
+      final results = service.getPlaces();
       expect(results, isNotEmpty);
       for (int i = 1; i < results.length; i++) {
-        expect(
-          results[i].distanceInKm,
-          greaterThanOrEqualTo(results[i - 1].distanceInKm!),
-        );
+        expect(results[i].rating, lessThanOrEqualTo(results[i - 1].rating));
       }
     });
 
@@ -44,6 +41,11 @@ void main() {
         results.every((p) => p.moods.contains('foodie') && p.isVisualFoodStall),
         isTrue,
       );
+    });
+
+    test('includeCurated false drops the curated set', () {
+      expect(service.getPlaces(includeCurated: false), isEmpty);
+      expect(service.getPlaces().isNotEmpty, isTrue);
     });
   });
 }
