@@ -10,6 +10,7 @@ import '../models/place.dart';
 import '../services/places_service.dart';
 import '../services/location_service.dart';
 import '../widgets/mood_selector.dart';
+import '../widgets/city_picker.dart';
 import '../widgets/place_card.dart';
 import '../widgets/place_detail_modal.dart';
 
@@ -43,6 +44,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   Timer? _debounce;
   List<Place> _searchResults = [];
   bool _showResults = false;
+  String? _selectedCityName;
   late final PageController _pageController;
 
   // Current map center (updated on search / location / recenter).
@@ -145,11 +147,19 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     });
   }
 
+  Future<void> _changeCity() async {
+    final place = await CityPicker.show(context, _placesService);
+    if (place != null && mounted) {
+      _selectCity(place);
+    }
+  }
+
   void _selectCity(Place place) {
     setState(() {
       _showResults = false;
       _searchResults = [];
       _mapCenter = LatLng(place.latitude, place.longitude);
+      _selectedCityName = place.name;
     });
     _searchController.clear();
     FocusScope.of(context).unfocus();
@@ -343,6 +353,26 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
                         tooltip: 'Recenter on my location',
                       ),
                     ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ActionChip(
+                      avatar: const Icon(Icons.location_city,
+                          size: 16, color: Colors.white),
+                      label: Text(
+                        _selectedCityName ?? 'Change City',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600),
+                      ),
+                      backgroundColor: Colors.deepOrange,
+                      onPressed: _changeCity,
+                    ),
                   ),
                 ),
 
