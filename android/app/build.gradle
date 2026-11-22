@@ -27,12 +27,12 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     defaultConfig {
@@ -44,9 +44,31 @@ android {
         manifestPlaceholders = [GOOGLE_MAPS_API_KEY: googleMapsApiKey]
     }
 
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("KEYSTORE_FILE")
+            if (keystorePath != null && !keystorePath.isEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("STORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            def keystorePath = System.getenv("KEYSTORE_FILE")
+            if (keystorePath != null && !keystorePath.isEmpty()) {
+                // Real release signing when KEYSTORE_FILE / STORE_PASSWORD /
+                // KEY_ALIAS / KEY_PASSWORD are provided (e.g. CI secrets).
+                signingConfig = signingConfigs.release
+            } else {
+                // No keystore configured (local prototype or CI without signing
+                // secrets): fall back to debug signing so the build still works.
+                // Never distribute an APK built this way.
+                signingConfig = signingConfigs.debug
+            }
         }
     }
 
