@@ -25,6 +25,9 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generate Android Scaffolding
+        run: flutter create . --platforms=android --org com.example --project-name city_vibe_explorer
+
       - name: Get Dependencies
         run: flutter pub get
 
