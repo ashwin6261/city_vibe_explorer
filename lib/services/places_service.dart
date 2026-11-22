@@ -87,7 +87,7 @@ class PlacesService {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': googleMapsApiKey!,
           'X-Goog-FieldMask':
-              'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount',
+              'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types',
         },
         body: jsonEncode({
           'includedTypes': includedTypes,

@@ -75,12 +75,35 @@ class Place {
     final displayName = json['displayName']?['text'] ?? json['name'] ?? 'Local Spot';
     final rating = (json['rating'] ?? 4.5).toDouble();
     final userRatingsTotal = json['userRatingCount'] ?? 100;
+    final types = (json['types'] as List?)?.map((e) => e.toString()).toList() ??
+        const <String>[];
+
+    // Derive flags/moods from the Google Places `types` instead of hardcoding,
+    // so live cafes/restaurants are "foodie" and attractions are "heritage"
+    // rather than everything being tagged as a visual food stall.
+    final bool isFood = types.any(
+      (t) => t == 'restaurant' || t == 'cafe' || t == 'bakery' || t == 'food',
+    );
+
+    final List<String> moods = ['visual'];
+    if (isFood) moods.add('foodie');
+    if (types.any(
+        (t) => t == 'tourist_attraction' || t == 'museum' || t == 'historical_site')) {
+      moods.add('heritage');
+    }
+    if (types.contains('cafe')) moods.add('chill');
+    if (types.any((t) => t == 'shopping_mall' || t == 'market')) {
+      moods.add('shopping');
+    }
+    if (types.any((t) => t == 'bar' || t == 'night_club')) {
+      moods.add('nightlife');
+    }
 
     return Place(
       id: json['id'] ?? json['place_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: displayName,
       category: 'Discovered Spot',
-      moods: ['foodie', 'visual'],
+      moods: moods,
       latitude: lat,
       longitude: lng,
       rating: rating,
@@ -90,7 +113,7 @@ class Place {
       address: json['formattedAddress'] ?? json['vicinity'] ?? 'Jaipur, Rajasthan',
       description: 'Popular spot retrieved from Google Places.',
       mustTry: 'Local Chef Special',
-      isVisualFoodStall: true,
+      isVisualFoodStall: isFood,
       isTopVisited: userRatingsTotal > 2000,
       placeId: json['id'] ?? json['place_id'],
     );
