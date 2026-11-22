@@ -152,7 +152,7 @@ class PlacesService {
       if (response.statusCode != 200) return [];
       final data = jsonDecode(response.body) as List;
       return data.map((d) {
-        final name = String(d['display_name'] ?? q).split(',').first.trim();
+        final name = (d['display_name'] ?? q).toString().split(',').first.trim();
         return Place(
           id: 'search_${d['place_id'] ?? d['lat']}',
           name: name.isEmpty ? q : name,
@@ -165,7 +165,7 @@ class PlacesService {
           visualScore: 0,
           imageUrl:
               'https://placehold.co/800x600.png?text=${Uri.encodeQueryComponent(name.isEmpty ? q : name)}',
-          address: String(d['display_name'] ?? q),
+          address: (d['display_name'] ?? q).toString(),
           description: 'Search result for "$q".',
           mustTry: 'Explore nearby',
           openingHours: '',
