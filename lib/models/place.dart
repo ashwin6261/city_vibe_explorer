@@ -203,8 +203,13 @@ class Place {
       address: addressParts.isEmpty ? 'Nearby' : addressParts.join(', '),
       description: (tags['description'] ?? 'A notable place near you.').toString(),
       mustTry: cuisine.isNotEmpty ? 'Try the local $cuisine' : 'Explore & discover',
-      isVisualFoodStall:
-          amenity == 'fast_food' || amenity == 'cafe' || amenity == 'food_court',
+      isVisualFoodStall: amenity == 'fast_food' ||
+          amenity == 'cafe' ||
+          amenity == 'food_court' ||
+          amenity == 'restaurant' ||
+          amenity == 'bar' ||
+          amenity == 'pub' ||
+          amenity == 'ice_cream',
       isTopVisited: false,
       openingHours: (tags['opening_hours'] ?? 'See on map').toString(),
       placeId: osmId?.toString(),
