@@ -107,6 +107,10 @@ class Place {
     if (types.any((t) => t == 'bar' || t == 'night_club')) {
       moods.add('nightlife');
     }
+    if (types.any((t) => t == 'museum' || t == 'art_gallery')) {
+      moods.add('museums');
+    }
+    if (types.contains('park')) moods.add('parks');
 
     return Place(
       id: json['id'] ?? json['place_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -178,6 +182,8 @@ class Place {
       moods.add('shopping');
     }
     if (amenity == 'bar' || amenity == 'pub') moods.add('nightlife');
+    if (tourism == 'museum' || tourism == 'gallery') moods.add('museums');
+    if (leisure == 'park' || leisure == 'garden') moods.add('parks');
 
     final score = _visualScoreFromTags(tags);
     final rating = double.parse((score / 20.0).clamp(1.0, 5.0).toStringAsFixed(1));
@@ -210,7 +216,7 @@ class Place {
           amenity == 'bar' ||
           amenity == 'pub' ||
           amenity == 'ice_cream',
-      isTopVisited: false,
+      isTopVisited: score >= 75,
       openingHours: (tags['opening_hours'] ?? 'See on map').toString(),
       placeId: osmId?.toString(),
       website: (tags['website'] ?? tags['contact:website'])?.toString(),

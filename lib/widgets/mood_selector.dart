@@ -22,6 +22,8 @@ const List<MoodCategory> moodCategories = [
   MoodCategory(id: 'chill', label: 'Chill Cafes', icon: Icons.local_cafe_rounded, color: Colors.teal),
   MoodCategory(id: 'shopping', label: 'Bazaars & Souvenirs', icon: Icons.shopping_bag_rounded, color: Colors.purpleAccent),
   MoodCategory(id: 'nightlife', label: 'Lively Nightlife', icon: Icons.nightlife_rounded, color: Colors.indigoAccent),
+  MoodCategory(id: 'museums', label: 'Museums & Art', icon: Icons.museum_rounded, color: Colors.brown),
+  MoodCategory(id: 'parks', label: 'Parks & Nature', icon: Icons.park_rounded, color: Colors.green),
 ];
 
 class MoodSelectorBar extends StatelessWidget {

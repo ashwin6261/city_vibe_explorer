@@ -232,10 +232,16 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.city_vibe_explorer',
               ),
               MarkerLayer(markers: _markers),
+              const RichAttributionWidget(
+                attributions: [
+                  TextSourceAttribution('© OpenStreetMap contributors © CARTO'),
+                ],
+              ),
             ],
           ),
 

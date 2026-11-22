@@ -7,15 +7,25 @@ import '../models/place.dart';
 /// opening hours, and one-tap turn-by-turn navigation in Google Maps.
 class PlaceDetailModal extends StatelessWidget {
   final Place place;
+  final ScrollController? scrollController;
 
-  const PlaceDetailModal({super.key, required this.place});
+  const PlaceDetailModal({super.key, required this.place, this.scrollController});
 
   static void show(BuildContext context, Place place) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => PlaceDetailModal(place: place),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.78,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => PlaceDetailModal(
+          place: place,
+          scrollController: scrollController,
+        ),
+      ),
     );
   }
 
@@ -83,10 +93,12 @@ class PlaceDetailModal extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SingleChildScrollView(
+        controller: scrollController,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Drag handle
           Center(
             child: Container(
@@ -391,6 +403,7 @@ class PlaceDetailModal extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

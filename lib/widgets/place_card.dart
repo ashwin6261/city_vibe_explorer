@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/place.dart';
 
@@ -13,6 +14,27 @@ class PlaceCard extends StatelessWidget {
     required this.onTap,
     required this.onNavigate,
   });
+
+  Future<void> _openYouTube(BuildContext context) async {
+    final url = place.videoUrl ??
+        'https://www.youtube.com/results?search_query='
+        '${Uri.encodeQueryComponent('${place.name} ${place.address}')}';
+    try {
+      final launched =
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open video')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open video')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +75,23 @@ class PlaceCard extends StatelessWidget {
                       height: 120,
                       color: Colors.grey.shade300,
                       child: const Icon(Icons.image, size: 40, color: Colors.grey),
+                    ),
+                  ),
+
+                  // Watch videos button
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.black.withAlpha(191),
+                      child: IconButton(
+                        icon: const Icon(Icons.play_circle_fill,
+                            color: Colors.white, size: 22),
+                        onPressed: () => _openYouTube(context),
+                        tooltip: 'Watch videos',
+                        padding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
 
