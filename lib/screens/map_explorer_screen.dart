@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -20,7 +21,7 @@ class MapExplorerScreen extends StatefulWidget {
 }
 
 class _MapExplorerScreenState extends State<MapExplorerScreen> {
-  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
+  final MapController _mapController = MapController();
   final PlacesService _placesService = PlacesService(
     googleMapsApiKey: AppConfig.googleMapsApiKey,
   );
@@ -33,18 +34,15 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   // State data
   List<Place> _filteredPlaces = [];
   List<Place> _livePlaces = [];
-  Set<Marker> _markers = {};
+  List<Marker> _markers = [];
   Position? _currentPosition;
   bool _hasLocationPermission = false;
   StreamSubscription<Position>? _positionStreamSubscription;
   bool _isFetchingLive = false;
   late final PageController _pageController;
 
-  // Default camera target: Jaipur center
-  static const CameraPosition _initialCamera = CameraPosition(
-    target: LatLng(26.9196, 75.8115),
-    zoom: 13.5,
-  );
+  // Default map target: Jaipur center
+  static const LatLng _initialCenter = LatLng(26.9196, 75.8115);
 
   @override
   void initState() {
@@ -61,11 +59,11 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     super.dispose();
   }
 
-  /// Initialize real-time location tracking as user moves around the city.
+  /// Initialize real-time location tracking as the user moves around the city.
   ///
   /// Permission is resolved first; the position stream is only subscribed when
-  /// permission is actually granted (and now carries an explicit error handler),
-  /// so a denied/unavailable sensor can never throw an unhandled exception.
+  /// permission is actually granted (and carries an explicit error handler), so
+  /// a denied/unavailable sensor can never throw an unhandled exception.
   Future<void> _initLocationTracking() async {
     final granted = await LocationService.handlePermission();
     if (!mounted) return;
@@ -88,7 +86,6 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
         }
       },
       onError: (Object error) {
-        // Sensor/permission errors must not crash the screen.
         debugPrint('Location stream error: $error');
       },
     );
@@ -123,21 +120,21 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     if (!mounted) return;
     setState(() {
       _filteredPlaces = places;
-      _updateMapMarkers();
+      _updateMarkers();
     });
   }
 
-  void _updateMapMarkers() {
-    final markers = <Marker>{};
+  void _updateMarkers() {
+    final markers = <Marker>[];
 
     // User location marker
     if (_currentPosition != null) {
       markers.add(
         Marker(
-          markerId: const MarkerId('user_location'),
-          position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'You are here', snippet: 'Exploring Jaipur'),
+          point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+          width: 26,
+          height: 26,
+          child: const Icon(Icons.my_location, color: Colors.blueAccent, size: 26),
         ),
       );
     }
@@ -145,33 +142,23 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     // Place markers
     for (int i = 0; i < _filteredPlaces.length; i++) {
       final place = _filteredPlaces[i];
-      // Color code: Orange for Visual Food Stalls, Gold for Top Visited, Violet for others.
-      double markerHue = BitmapDescriptor.hueViolet;
-      if (place.isVisualFoodStall) {
-        markerHue = BitmapDescriptor.hueOrange;
-      } else if (place.isTopVisited) {
-        markerHue = BitmapDescriptor.hueYellow;
-      }
+      // Colour code: Orange = Visual Food Stall, Amber = Top Visited, Purple = other.
+      final Color color = place.isVisualFoodStall
+          ? Colors.deepOrange
+          : (place.isTopVisited ? Colors.amber : Colors.deepPurple);
 
       markers.add(
         Marker(
-          markerId: MarkerId(place.id),
-          position: LatLng(place.latitude, place.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(markerHue),
-          infoWindow: InfoWindow(
-            title: place.name,
-            snippet: 'Visual ${place.visualScore}% • ${place.mustTry}',
-            onTap: () => PlaceDetailModal.show(context, place),
+          point: LatLng(place.latitude, place.longitude),
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: () {
+              PlaceDetailModal.show(context, place);
+              _moveTo(LatLng(place.latitude, place.longitude), 15.5);
+            },
+            child: Icon(Icons.location_on, color: color, size: 38),
           ),
-          onTap: () {
-            unawaited(
-              _pageController.animateToPage(
-                i,
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeInOut,
-              ),
-            );
-          },
         ),
       );
     }
@@ -179,28 +166,19 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     _markers = markers;
   }
 
-  Future<void> _animateToPlace(Place place) async {
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: LatLng(place.latitude, place.longitude),
-          zoom: 15.5,
-        ),
-      ),
-    );
+  /// Safely move the map camera (no-op if the controller is not attached yet).
+  void _moveTo(LatLng target, double zoom) {
+    try {
+      _mapController.move(target, zoom);
+    } catch (_) {
+      // Map not laid out yet; ignore.
+    }
   }
 
   Future<void> _recenterOnUser() async {
-    final GoogleMapController controller = await _controller.future;
     final lat = _currentPosition?.latitude ?? LocationService.defaultLat;
     final lng = _currentPosition?.longitude ?? LocationService.defaultLng;
-
-    controller.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: LatLng(lat, lng), zoom: 14.5),
-      ),
-    );
+    _moveTo(LatLng(lat, lng), 14.5);
     if (_currentPosition != null) {
       unawaited(_fetchLivePlaces(_currentPosition!));
     }
@@ -223,9 +201,7 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -233,19 +209,20 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Interactive Google Map
-          GoogleMap(
-            initialCameraPosition: _initialCamera,
-            markers: _markers,
-            myLocationEnabled: _hasLocationPermission,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            compassEnabled: true,
-            onMapCreated: (GoogleMapController controller) {
-              if (!_controller.isCompleted) {
-                _controller.complete(controller);
-              }
-            },
+          // 1. Interactive OpenStreetMap (no API key required)
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _initialCenter,
+              initialZoom: 13.5,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.city_vibe_explorer',
+              ),
+              MarkerLayer(markers: _markers),
+            ],
           ),
 
           // 2. Top Header with City Vibe branding and Mood Filter Carousel
@@ -343,7 +320,8 @@ class _MapExplorerScreenState extends State<MapExplorerScreen> {
                 controller: _pageController,
                 itemCount: _filteredPlaces.length,
                 onPageChanged: (index) {
-                  unawaited(_animateToPlace(_filteredPlaces[index]));
+                  final place = _filteredPlaces[index];
+                  _moveTo(LatLng(place.latitude, place.longitude), 15.5);
                 },
                 itemBuilder: (context, index) {
                   final place = _filteredPlaces[index];

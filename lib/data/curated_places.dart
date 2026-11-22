@@ -14,7 +14,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 48500,
     visualScore: 94,
-    imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Rajasthani_Raj_Kachori.jpg/330px-Rajasthani_Raj_Kachori.jpg',
     address: 'Station Road, Sindhi Camp, Jaipur',
     description:
         'World famous for its piping hot, flaky Pyaaz Kachoris. Watch the master fryers handling gigantic sizzling kadhais in an electric street-food spectacle.',
@@ -35,7 +35,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.7,
     userRatingsTotal: 24300,
     visualScore: 96,
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Salt_lassi.jpg/330px-Salt_lassi.jpg',
     address: '312, MI Road, Jayanti Market, Jaipur',
     description:
         'Serving Jaipur since 1944. Thick, velvety curd lassi served in authentic red terracotta clay kulhads, topped with a thick dollop of clotted cream (malai). Highly photogenic pour!',
@@ -56,7 +56,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.8,
     userRatingsTotal: 82000,
     visualScore: 99,
-    imageUrl: 'https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg/330px-East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg',
     address: 'Hawa Mahal Rd, Badi Choupad, Pink City, Jaipur',
     description:
         'Iconic five-story pink sandstone palace with 953 intricately carved jharokhas (small casements). The definitive visual emblem of Jaipur.',
@@ -77,7 +77,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.5,
     userRatingsTotal: 4900,
     visualScore: 98,
-    imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg/330px-East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg',
     address: 'Opposite Hawa Mahal, 3rd Floor, Badi Choupad, Jaipur',
     description:
         'Unmatched direct eye-level panorama of Hawa Mahal. Sip artisan coffee or spiced mocktails as the sunset paints the sandstone golden.',
@@ -98,7 +98,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 17200,
     visualScore: 95,
-    imageUrl: 'https://images.unsplash.com/photo-1505253758473-96b46deae6f9?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/The_delicious_Rajasthani_food.png/330px-The_delicious_Rajasthani_food.png',
     address: 'Ram Niwas Garden, Near Albert Hall, Jaipur',
     description:
         'Curated open-air garden square housing 21 of Jaipur’s most iconic heritage street food stalls in one vibrant spot surrounded by lush lawns.',
@@ -119,7 +119,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.8,
     userRatingsTotal: 31000,
     visualScore: 100,
-    imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Patrika_Gate_Jawahar_Circle_Jaipur_2022-07.jpg/330px-Patrika_Gate_Jawahar_Circle_Jaipur_2022-07.jpg',
     address: 'Jawahar Circle Garden, Malviya Nagar, Jaipur',
     description:
         'Vividly hand-painted royal arches illustrating Rajasthan’s rich princely heritage, wars, crafts, and royal portraits. Ranked among India’s top Instagram visual hotspots.',
@@ -140,7 +140,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.8,
     userRatingsTotal: 115000,
     visualScore: 98,
-    imageUrl: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/20191219_Fort_Amber%2C_Amer%2C_Jaipur_0955_9481.jpg/330px-20191219_Fort_Amber%2C_Amer%2C_Jaipur_0955_9481.jpg',
     address: 'Devisinghpura, Amer, Jaipur',
     description:
         'Magnificent hilltop palace fortress overlooking Maota Lake. Famous for the glittering Sheesh Mahal (Mirror Palace) and royal ramparts.',
@@ -161,7 +161,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.5,
     userRatingsTotal: 11200,
     visualScore: 91,
-    imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Chai_In_Sakora.jpg/330px-Chai_In_Sakora.jpg',
     address: 'Opposite Ganpati Plaza, MI Road, Jaipur',
     description:
         'Famous tea stall brewing fragrant saffron and ginger masala chai served in hot clay cups with butter-slathered bun maska.',
@@ -182,7 +182,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.7,
     userRatingsTotal: 65000,
     visualScore: 97,
-    imageUrl: 'https://images.unsplash.com/photo-1608759458999-7389178ee9d4?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Nahargarh_13.jpg/330px-Nahargarh_13.jpg',
     address: 'Krishna Nagar, Brahampuri, Jaipur',
     description:
         'Perched atop the Aravalli hills, offering the ultimate breathtaking sunset panoramic view of the entire lit-up Pink City.',
@@ -203,7 +203,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 28000,
     visualScore: 93,
-    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Albert_Hall_%28_Jaipur_%29.jpg/330px-Albert_Hall_%28_Jaipur_%29.jpg',
     address: 'Bapu Bazaar, Pink City, Jaipur',
     description:
         'Vibrant pink market lanes lined with handcrafted Mojaris, block-printed textiles, and buzzing street carts serving spicy Gol Gappas, Dahi Puri, and Kulfi.',
@@ -224,7 +224,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 54000,
     visualScore: 97,
-    imageUrl: 'https://picsum.photos/seed/jal-mahal-jaipur/800/600',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Jaipur_03-2016_39_Jal_Mahal_-_Water_Palace.jpg/330px-Jaipur_03-2016_39_Jal_Mahal_-_Water_Palace.jpg',
     address: 'Amer Road, Man Sagar Lake, Jaipur',
     description:
         'Enchanting palace appearing to float in the middle of Man Sagar Lake. The lakeside promenade is lively with street musicians and roasted corn stalls.',
@@ -245,7 +245,7 @@ final List<Place> jaipurCuratedPlaces = [
     rating: 4.6,
     userRatingsTotal: 8400,
     visualScore: 92,
-    imageUrl: 'https://picsum.photos/seed/pandit-kulfi-jaipur/800/600',
+    imageUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Matka_kulfi.jpg/330px-Matka_kulfi.jpg',
     address: 'Near Hawa Mahal, Sireh Deori Bazaar, Jaipur',
     description:
         'Famous heritage kulfi cart serving rich Rabdi, Kesar Pista, and Paan kulfi freshly cut from earthen moulds onto green leaves.',

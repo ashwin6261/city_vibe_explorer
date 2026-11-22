@@ -1,5 +1,5 @@
 name: city_vibe_explorer
-description: "A smart city exploration Flutter app featuring live Google Maps, real-time GPS tracking, curated visual food stalls, top visited spots, and mood-based recommendations."
+description: "A smart city exploration Flutter app featuring live OpenStreetMap, real-time GPS tracking, curated visual food stalls, top visited spots, and mood-based recommendations."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,11 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # Google Maps Flutter SDK (official)
-  google_maps_flutter: ^2.5.3
+  # OpenStreetMap map widget (no API key required)
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
   # Geolocation & GPS tracking
   geolocator: ^10.1.0
-  # HTTP client for Google Places & Routes APIs
+  # HTTP client for Google Places API (optional live data)
   http: ^1.2.0
   # URL launcher for turn-by-turn navigation in Google Maps
   url_launcher: ^6.2.4
@@ -28,4 +29,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
